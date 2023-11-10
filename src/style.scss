@@ -29,7 +29,7 @@ body {
 
 .product-card {
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 16px;
   background-color: $card-background;
   position: relative;
   width: 100%;
@@ -63,7 +63,7 @@ body {
   &:hover {
     // height: 240px;
     z-index: 999;
-    border-radius: 12px 12px 0 0;
+    border-radius: 16px 16px 0 0;
     box-shadow: $card-shadow;
     transform: scale(1.03);
 

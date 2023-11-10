@@ -48,22 +48,17 @@ const App = () => {
   const { products = [] } = store.getState();
 
   return div({
-    className: "app",
-    children: [
-      div({
-        className: "product-container",
-        children: products.map((itm) => {
-          return ProductCard({
-            id: itm.id,
-            image: itm.image,
-            title: itm.title,
-            description: itm.description,
-            isAddedToCart: itm.isAddedToCart,
-            // onclick: () => console.log(itm),
-          });
-        }),
-      }),
-    ],
+    className: "product-container",
+    children: products.map((itm) => {
+      return ProductCard({
+        id: itm.id,
+        image: itm.image,
+        title: itm.title,
+        description: itm.description,
+        isAddedToCart: itm.isAddedToCart,
+        // onclick: () => console.log(itm),
+      });
+    }),
   });
 };
 
