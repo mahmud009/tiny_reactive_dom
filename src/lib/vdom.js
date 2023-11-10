@@ -65,6 +65,7 @@ function vElementBase(type) {
 export const script = vElementBase("script");
 export const div = vElementBase("div");
 export const span = vElementBase("span");
+export const img = vElementBase("img");
 export const a = vElementBase("a");
 export const p = vElementBase("p");
 export const h1 = vElementBase("h1");

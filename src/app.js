@@ -1,23 +1,32 @@
 import "./style.scss";
-import { div, h4, p, button, render } from "./lib/vdom";
+import { div, h4, p, button, render, img } from "./lib/vdom";
+import { sampleProducts } from "./utils";
+import { State } from "./lib/state";
 
-const productsState = Array.from({ length: 500 }).map((itm, idx) => {
-  return {
-    id: `tp-${idx + 1}`,
-    title: `Mock Title ${idx + 1}`,
-    description: `mock product description lorem ipsum it is a long established fact that a reader will be distracted by the readable content ${
-      idx + 1
-    }`,
-    isAddedToCart: false,
-  };
-});
+const store = new State();
+store.setState({ products: sampleProducts });
 
 const ProductCard = (props) => {
+  const border = `1px solid ${props.isAddedToCart ? "#005b41" : "#292929"}`;
+  const buttonText = props.isAddedToCart ? "Remove From Cart" : "Add To Cart";
+
   return div({
     className: "product-card",
-    onclick: props.onclick,
-    style: { border: `1px solid #292929` },
+    style: { border },
+    onclick: (ev) => {
+      const products = store.getState().products;
+      const updated = products.map((itm) => {
+        if (itm.id === props.id) itm.isAddedToCart = !itm.isAddedToCart;
+        return itm;
+      });
+      store.setState({ products: updated });
+    },
+
     children: [
+      img({
+        className: "product-card__image",
+        src: props.image,
+      }),
       div({
         className: "product-card__title",
         children: [h4({ children: [props.title] })],
@@ -28,27 +37,39 @@ const ProductCard = (props) => {
       }),
       div({
         className: "product-card__footer",
-        style: { outline: `1px solid #292929` },
-        children: [button({ children: ["Add To Cart"] })],
+        style: { outline: border },
+        children: [button({ children: [buttonText] })],
       }),
     ],
   });
 };
 
-const App = div({
-  className: "app",
-  children: [
-    div({
-      className: "product-container",
-      children: productsState.map((itm) => {
-        return ProductCard({
-          title: itm.title,
-          description: itm.description,
-          onclick: () => console.log(itm),
-        });
-      }),
-    }),
-  ],
-});
+const App = () => {
+  const { products = [] } = store.getState();
 
-document.querySelector("#app")?.appendChild(render(App));
+  return div({
+    className: "app",
+    children: [
+      div({
+        className: "product-container",
+        children: products.map((itm) => {
+          return ProductCard({
+            id: itm.id,
+            image: itm.image,
+            title: itm.title,
+            description: itm.description,
+            isAddedToCart: itm.isAddedToCart,
+            // onclick: () => console.log(itm),
+          });
+        }),
+      }),
+    ],
+  });
+};
+
+store.subscribe(() => {
+  const appRoot = document.querySelector("#app");
+  appRoot.innerHTML = "";
+  appRoot.appendChild(render(App()));
+});
+document.querySelector("#app")?.appendChild(render(App()));
