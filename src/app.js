@@ -18,18 +18,19 @@ const ProductCard = (props) => {
   const border = `1px solid ${props.isAddedToCart ? "#005b41" : "#292929"}`;
   const buttonText = props.isAddedToCart ? "Remove From Cart" : "Add To Cart";
 
+  const handleAddToCart = (ev) => {
+    const products = store.getState().products;
+    const updated = products.map((itm) => {
+      if (itm.id === props.id) itm.isAddedToCart = !itm.isAddedToCart;
+      return itm;
+    });
+    store.setState({ products: updated });
+  };
+
   return div({
     className: "product-card",
     style: { border },
-    onclick: (ev) => {
-      const products = store.getState().products;
-      const updated = products.map((itm) => {
-        if (itm.id === props.id) itm.isAddedToCart = !itm.isAddedToCart;
-        return itm;
-      });
-      store.setState({ products: updated });
-    },
-
+    onclick: handleAddToCart,
     children: [
       img({
         className: "product-card__image",
