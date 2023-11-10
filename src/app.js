@@ -1,5 +1,13 @@
 import "./style.scss";
-import { div, h4, p, button, render, img } from "./lib/vdom";
+import {
+  div,
+  h4,
+  p,
+  button,
+  render,
+  img,
+  reconstructDomTree,
+} from "./lib/vdom";
 import { sampleProducts } from "./utils";
 import { State } from "./lib/state";
 
@@ -37,7 +45,7 @@ const ProductCard = (props) => {
       }),
       div({
         className: "product-card__footer",
-        style: { outline: border },
+        // style: { outline: border },
         children: [button({ children: [buttonText] })],
       }),
     ],
@@ -62,9 +70,14 @@ const App = () => {
   });
 };
 
+let historyVtree = App();
 store.subscribe(() => {
+  // console.log(historyVtree);
   const appRoot = document.querySelector("#app");
-  appRoot.innerHTML = "";
-  appRoot.appendChild(render(App()));
+  const newVtree = App();
+  // console.log(newVtree);
+
+  reconstructDomTree(appRoot, historyVtree, newVtree);
+  historyVtree = newVtree;
 });
-document.querySelector("#app")?.appendChild(render(App()));
+document.querySelector("#app")?.appendChild(render(historyVtree));
