@@ -1,45 +1,44 @@
 // --------------utils----------------
 function objectToStyleString(obj) {
+  if (!obj) return "";
   let entries = Object.entries(obj);
   return entries.map(([key, value]) => `${key}:${value}`).join(";");
 }
 
-function createVNode(type, props, ...children) {
+function createVNode(type, attrs, ...children) {
   return {
     type,
-    props: props || {},
+    attrs: attrs || {},
     children,
   };
 }
 
+function createVElement(type) {
+  return function ({ children = [], className, style, ...rest }) {
+    let attrs = {};
+    if (className) attrs.class = className;
+    if (style) attrs.style = objectToStyleString(style);
+    attrs = { ...rest, ...attrs };
+    return createVNode(type, attrs, ...children);
+  };
+}
 // -----------------------------------
 
 // ------------virtual dom element templates-----------
-function vElementBase(type) {
-  return function ({ children = [], ...rest }) {
-    if (rest.className) {
-      rest.class = rest.className;
-      delete rest.className;
-    }
-    if (rest.style) {
-      rest.style = objectToStyleString(rest.style);
-    }
-    return createVNode(type, rest, ...children);
-  };
-}
-export const script = vElementBase("script");
-export const div = vElementBase("div");
-export const span = vElementBase("span");
-export const img = vElementBase("img");
-export const a = vElementBase("a");
-export const p = vElementBase("p");
-export const h1 = vElementBase("h1");
-export const h2 = vElementBase("h2");
-export const h3 = vElementBase("h3");
-export const h4 = vElementBase("h4");
-export const h5 = vElementBase("h5");
-export const h6 = vElementBase("h6");
-export const button = vElementBase("button");
+export const script = createVElement("script");
+export const div = createVElement("div");
+export const span = createVElement("span");
+export const img = createVElement("img");
+export const a = createVElement("a");
+export const p = createVElement("p");
+export const h1 = createVElement("h1");
+export const h2 = createVElement("h2");
+export const h3 = createVElement("h3");
+export const h4 = createVElement("h4");
+export const h5 = createVElement("h5");
+export const h6 = createVElement("h6");
+export const button = createVElement("button");
+export const icon = createVElement("i");
 // -----------------------------------------------------
 
 export function render(vnode) {
@@ -47,36 +46,43 @@ export function render(vnode) {
     return document.createTextNode(vnode);
   }
   const domNode = document.createElement(vnode.type);
-  for (let key in vnode.props) {
+
+  for (let key in vnode.attrs) {
     if (key.startsWith("on")) {
-      domNode[key] = vnode.props[key];
+      domNode[key] = vnode.attrs[key];
     } else {
-      domNode.setAttribute(key, vnode.props[key]);
+      domNode.setAttribute(key, vnode.attrs[key]);
     }
   }
+
   for (let child of vnode.children) {
     domNode.append(render(child));
   }
   return domNode;
 }
 
-export function reconstructDomTree(domParent, oldVNode, newVNode, index = 0) {
+export function reconcileDom(domParent, oldVNode, newVNode, index = 0) {
   // new additions
-  if (!oldVNode && newVNode) {
+  if (!oldVNode?.type && newVNode?.type) {
     domParent.appendChild(render(newVNode));
     return;
   }
 
   // removals
-  if (oldVNode && !newVNode) {
+  if (oldVNode?.type && !newVNode?.type) {
     domParent.removeChild(domParent.childNodes[index]);
     return;
   }
 
-  // TODO : add fine grain heuristics
   // heuristics for comparing nodes
   if (isNodeChanged(oldVNode, newVNode)) {
     domParent.replaceChild(render(newVNode), domParent.childNodes[index]);
+  }
+  if (isStyleChnaged(oldVNode, newVNode)) {
+    domParent.childNodes[index].setAttribute("style", newVNode.attrs.style);
+  }
+  if (isClassChanged(oldVNode, newVNode)) {
+    domParent.childNodes[index].setAttribute("class", newVNode?.attrs?.class);
   }
 
   // Recursively update children
@@ -84,7 +90,7 @@ export function reconstructDomTree(domParent, oldVNode, newVNode, index = 0) {
     const newLength = newVNode.children.length;
     const oldLength = oldVNode?.children?.length;
     for (let i = 0; i < newLength || i < oldLength; i++) {
-      reconstructDomTree(
+      reconcileDom(
         domParent.childNodes[index],
         oldVNode.children[i],
         newVNode.children[i],
@@ -94,27 +100,23 @@ export function reconstructDomTree(domParent, oldVNode, newVNode, index = 0) {
   }
 }
 
-function isNodeChanged(node1, node2) {
+function isNodeChanged(oldVNode, newVNode) {
   return (
-    typeof node1 !== typeof node2 ||
-    (typeof node1 === "string" && node1 !== node2) ||
-    node1.type !== node2.type ||
-    !isObjectEqual(node1.props, node2.props)
+    typeof oldVNode !== typeof newVNode ||
+    (typeof oldVNode === "string" && oldVNode !== newVNode) ||
+    (typeof oldVNode === "number" && oldVNode !== newVNode) ||
+    oldVNode.type !== newVNode.type
   );
 }
 
-function isObjectEqual(objA, objB) {
-  if (!objA || !objB) {
-    return false;
-  }
+function isStyleChnaged(oldVNode, newVNode) {
+  const oldStyle = oldVNode?.attrs?.style;
+  const newStyle = newVNode?.attrs?.style;
+  return oldStyle !== newStyle;
+}
 
-  if (Object.keys(objA).length !== Object.keys(objB).length) {
-    return false;
-  }
-  for (let key in objA) {
-    if (objA[key] !== objB[key]) {
-      return false;
-    }
-  }
-  return true;
+function isClassChanged(oldVNode, newVNode) {
+  const oldClass = oldVNode?.attrs?.class;
+  const newClass = newVNode?.attrs?.class;
+  return oldClass !== newClass;
 }

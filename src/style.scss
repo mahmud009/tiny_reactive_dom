@@ -1,7 +1,17 @@
+// pallete
 $primary-color: #005b41;
+
+// backgrounds
 $background-color: #0f0f0f;
-$card-background: lighten($background-color, 3%);
-$card-shadow: 0px 0px 30px 15px darken($background-color, 2%);
+$background-color-card: lighten($background-color, 3%);
+$background-color-hover: lighten($background-color, 8%);
+
+// text colors
+$text-primary: darken(#ffffff, 10);
+$text-secondary: darken(#ffffff, 50);
+
+// borders
+$border-primary: #292929;
 
 * {
   box-sizing: border-box;
@@ -12,31 +22,55 @@ $card-shadow: 0px 0px 30px 15px darken($background-color, 2%);
 
 body {
   background-color: $background-color;
-  color: #faf0e6;
-  padding: 30px;
+  color: $text-primary;
+  padding: 16px;
   font-family: "Poppins", sans-serif;
   letter-spacing: 0.05em;
+  font-smooth: always;
 }
 
 .product-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-
   column-gap: 30px;
   row-gap: 30px;
   flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.preloader {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .product-card {
   cursor: pointer;
   border-radius: 16px 16px 12px 12px;
-  background-color: $card-background;
+  background-color: $background-color-card;
   position: relative;
   width: 100%;
   transition: transform 0.2s ease;
-  padding: 16px;
 
-  // overflow: hidden;
+  &:hover {
+    @media screen and (min-width: 1025px) {
+      transform: scale(1.05);
+    }
+  }
+
+  &__body {
+    padding: 16px;
+  }
 
   &__image {
     width: 100%;
@@ -45,44 +79,132 @@ body {
     border-radius: 12px;
   }
 
-  &__title {
+  &__title h4 {
     margin-top: 16px;
-    font-weight: 700;
-    font-size: 18px;
+    font-weight: 600;
+    font-size: 1.1rem;
     padding: 0 6px;
   }
 
-  &__description {
+  &__description p {
     margin-top: 12px;
     font-weight: 400;
-    font-size: 14px;
-    opacity: 0.5;
+    font-size: 0.9rem;
+    color: $text-secondary;
     padding: 0 6px;
   }
 
   &__footer {
+    padding: 16px;
+    display: flex;
     margin-top: 16px;
-    button {
-      width: 100%;
-      background-color: $primary-color;
-      padding: 8px 16px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: none;
-      color: #ffffff;
-      transition: all 0.3s ease;
-      width: 100%;
-      cursor: pointer;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid $border-primary;
+    gap: 16px;
+  }
 
+  &__cart-button {
+    font-family: "Poppins", sans-serif;
+    width: 100%;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    line-height: 1.3rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    border: none;
+    color: #ffffff;
+    transition: all 0.3s ease;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    @media screen and (max-width: 600px) {
+      font-size: 0.9rem;
+    }
+
+    & i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-45%);
+      font-size: 0.8rem;
+      line-height: 1;
+
+      &::before {
+        line-height: 1.4;
+      }
+    }
+
+    &.add {
+      background-color: $primary-color;
       &:hover {
         background-color: lighten($primary-color, 10%);
+      }
+    }
+
+    &.remove {
+      border: 1px solid #be3144;
+      background-color: transparent;
+      color: #be3144;
+      &:hover {
+        background-color: $background-color-hover;
       }
     }
   }
 }
 
-.rating-wrapper {
+.counter {
   display: flex;
-  gap: 12px;
   align-items: center;
+
+  &__value {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid $border-primary;
+    border-right: none;
+    border-left: none;
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  &__button {
+    background-color: transparent;
+    border: 1px solid $border-primary;
+    padding: 0;
+    color: $text-primary;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.6rem;
+    line-height: 1;
+
+    &.dec {
+      border-radius: 8px 0 0 8px;
+    }
+    &.inc {
+      border-radius: 0 8px 8px 0;
+    }
+
+    &:hover {
+      background-color: $background-color-hover;
+    }
+    &:active {
+      font-size: 1.4rem;
+      background-color: lighten($background-color-hover, 5);
+      // transform: scale(0.9);
+    }
+  }
 }
