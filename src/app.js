@@ -14,9 +14,8 @@ import { State } from "./lib/state";
 import { span } from "./lib/vdom";
 
 const store = new State();
-// store.setState({ products: sampleProducts });
 
-const ProductCounter = (props) => {
+const Counter = (props) => {
   return div({
     className: "counter",
     children: [
@@ -30,7 +29,7 @@ const ProductCounter = (props) => {
       }),
       div({
         className: "counter__value",
-        children: [props.selectedQuantity],
+        children: [props.value],
       }),
       button({
         onclick: (event) => {
@@ -116,8 +115,8 @@ const ProductCard = (props) => {
       div({
         className: "product-card__footer",
         children: [
-          ProductCounter({
-            selectedQuantity: props.selectedQuantity,
+          Counter({
+            value: props.selectedQuantity,
             onChange: handleChangeQuantity,
           }),
           ProductAddToCartButton({
@@ -134,10 +133,11 @@ class SideEffect {
   constructor() {
     this.counter = 0;
   }
-  createEffect(callback) {
+  createEffect = (callback) => {
+    // console.log(this.counter);
     if (this.counter === 0) callback();
     this.counter++;
-  }
+  };
 }
 const sideEffect = new SideEffect();
 
@@ -160,26 +160,27 @@ function runOnce() {
   };
 }
 
-let onceRunner = runOnce();
+let renderCount = 0;
+
 function sideEffectHandler() {
   let hasRun = false;
   let subscribers = [];
-  let renderCount = 0;
   let effectCounter = {};
 
-  function createEffect(cb) {
-    onceRunner(() => renderCount++);
-    let cbUniqId = Symbol();
-    if (effectCounter[cbUniqId] === undefined) effectCounter[cbUniqId] = 0;
-  }
+  let onceRunner = runOnce();
+  onceRunner(() => {
+    renderCount++;
+  });
+
+  function createEffect(cb) {}
 
   return createEffect;
 }
 
 // createEffect();
 // createEffect();
-const createEffect = sideEffectHandler();
-function App() {
+
+function App(props = {}) {
   const { products = [], isProductsLoading = true } = store.getState();
 
   sideEffect.createEffect(async () => {
@@ -187,7 +188,6 @@ function App() {
     store.setState({ products, isProductsLoading: false });
   });
 
-  // TODO : fix inconsistent rendering
   if (isProductsLoading) {
     return div({
       className: "preloader",
@@ -202,29 +202,32 @@ function App() {
 
   return div({
     className: "product-container",
-    children: products.map((itm) => {
-      return ProductCard({
-        id: itm.id,
-        image: itm.image,
-        title: itm.title,
-        description: itm.description,
-        maxQuantity: itm.maxQuantity,
-        selectedQuantity: itm.selectedQuantity,
-        isAddedToCart: itm.isAddedToCart,
-      });
-    }),
+    children: [
+      // Counter({
+      //   value: state.count,
+      //   onChange: (isInc) => {
+      //     setState({ count: isInc ? state.count + 1 : state.count - 1 });
+      //   },
+      // }),
+      ...products.map((itm) => {
+        return ProductCard({
+          id: itm.id,
+          image: itm.image,
+          title: itm.title,
+          description: itm.description,
+          maxQuantity: itm.maxQuantity,
+          selectedQuantity: itm.selectedQuantity,
+          isAddedToCart: itm.isAddedToCart,
+        });
+      }),
+    ],
   });
 }
 
 let historyVtree = App();
-store.subscribe(() => {
-  // console.log(historyVtree);
+store.subscribe(function () {
   const appRoot = document.querySelector("#app");
-  // appRoot.innerHTML = "";
-  // appRoot.append(render(App()));
-
   const newVtree = App();
-  // console.log(newVtree);
   reconcileDom(appRoot, historyVtree, newVtree);
   historyVtree = newVtree;
 });
