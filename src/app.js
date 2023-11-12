@@ -138,11 +138,8 @@ class SideEffect {
     if (this.counter === 0) callback();
     this.counter++;
   }
-  registerEffect(callback) {}
 }
 const sideEffect = new SideEffect();
-
-console.log();
 
 async function getApiData() {
   return new Promise((resolve, reject) => {
@@ -186,24 +183,22 @@ function App() {
   const { products = [], isProductsLoading = true } = store.getState();
 
   sideEffect.createEffect(async () => {
-    store.setState({ isProductsLoading: true });
     const products = await getApiData();
     store.setState({ products, isProductsLoading: false });
-    console.log(store.getState());
   });
 
   // TODO : fix inconsistent rendering
-  // if (isProductsLoading) {
-  //   return span({
-  //     className: "preloader",
-  //     children: [
-  //       span({
-  //         className: "preloader__spinner",
-  //         children: ["...loading"],
-  //       }),
-  //     ],
-  //   });
-  // }
+  if (isProductsLoading) {
+    return div({
+      className: "preloader",
+      children: [
+        span({
+          className: "preloader__spinner",
+          children: ["...loading"],
+        }),
+      ],
+    });
+  }
 
   return div({
     className: "product-container",
@@ -229,6 +224,7 @@ store.subscribe(() => {
   // appRoot.append(render(App()));
 
   const newVtree = App();
+  // console.log(newVtree);
   reconcileDom(appRoot, historyVtree, newVtree);
   historyVtree = newVtree;
 });

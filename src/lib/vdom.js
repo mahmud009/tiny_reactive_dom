@@ -74,10 +74,13 @@ export function reconcileDom(domParent, oldVNode, newVNode, index = 0) {
     return;
   }
 
-  // heuristics for comparing nodes
+  // changed
   if (isNodeChanged(oldVNode, newVNode)) {
     domParent.replaceChild(render(newVNode), domParent.childNodes[index]);
+    return;
   }
+
+  // heuristics for comparing nodes
   if (isStyleChnaged(oldVNode, newVNode)) {
     domParent.childNodes[index].setAttribute("style", newVNode.attrs.style);
   }
@@ -87,7 +90,7 @@ export function reconcileDom(domParent, oldVNode, newVNode, index = 0) {
 
   // Recursively update children
   if (newVNode.type && oldVNode.type) {
-    const newLength = newVNode.children.length;
+    const newLength = newVNode?.children.length;
     const oldLength = oldVNode?.children?.length;
     for (let i = 0; i < newLength || i < oldLength; i++) {
       reconcileDom(
