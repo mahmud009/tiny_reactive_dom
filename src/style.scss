@@ -202,9 +202,7 @@ body {
       background-color: $background-color-hover;
     }
     &:active {
-      font-size: 1.4rem;
       background-color: lighten($background-color-hover, 5);
-      // transform: scale(0.9);
     }
   }
 }

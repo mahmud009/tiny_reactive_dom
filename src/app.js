@@ -134,7 +134,6 @@ class SideEffect {
     this.counter = 0;
   }
   createEffect = (callback) => {
-    // console.log(this.counter);
     if (this.counter === 0) callback();
     this.counter++;
   };
@@ -149,36 +148,6 @@ async function getApiData() {
     }, 1000);
   });
 }
-
-function runOnce() {
-  let hasRun = false;
-  return function (callback) {
-    if (!hasRun) {
-      callback();
-      hasRun = true;
-    }
-  };
-}
-
-let renderCount = 0;
-
-function sideEffectHandler() {
-  let hasRun = false;
-  let subscribers = [];
-  let effectCounter = {};
-
-  let onceRunner = runOnce();
-  onceRunner(() => {
-    renderCount++;
-  });
-
-  function createEffect(cb) {}
-
-  return createEffect;
-}
-
-// createEffect();
-// createEffect();
 
 function App(props = {}) {
   const { products = [], isProductsLoading = true } = store.getState();
@@ -203,12 +172,6 @@ function App(props = {}) {
   return div({
     className: "product-container",
     children: [
-      // Counter({
-      //   value: state.count,
-      //   onChange: (isInc) => {
-      //     setState({ count: isInc ? state.count + 1 : state.count - 1 });
-      //   },
-      // }),
       ...products.map((itm) => {
         return ProductCard({
           id: itm.id,
@@ -224,11 +187,18 @@ function App(props = {}) {
   });
 }
 
-let historyVtree = App();
+let historyVtree = new App();
 store.subscribe(function () {
   const appRoot = document.querySelector("#app");
-  const newVtree = App();
+  const newVtree = new App();
   reconcileDom(appRoot, historyVtree, newVtree);
   historyVtree = newVtree;
 });
 document.querySelector("#app")?.appendChild(render(historyVtree));
+
+const foo = {};
+const { helo } = foo;
+console.log(helo);
+
+// that 70s show.
+// silicon valley.
