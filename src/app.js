@@ -8,6 +8,7 @@ import {
   img,
   reconcileDom,
   icon,
+  textNode,
 } from "./lib/vdom";
 import { sampleProducts } from "./utils";
 import { State } from "./lib/state";
@@ -25,11 +26,11 @@ const Counter = (props) => {
           props.onChange(false);
         },
         className: "counter__button dec",
-        children: ["-"],
+        children: [textNode("-")],
       }),
       div({
         className: "counter__value",
-        children: [props.value],
+        children: [textNode(props.value)],
       }),
       button({
         onclick: (event) => {
@@ -37,7 +38,7 @@ const Counter = (props) => {
           props.onChange(true);
         },
         className: "counter__button inc",
-        children: ["+"],
+        children: [textNode("+")],
       }),
     ],
   });
@@ -46,14 +47,16 @@ const Counter = (props) => {
 const ProductAddToCartButton = (props) => {
   return button({
     onclick: props.onclick,
-    className: `product-card__cart-button ${
-      props.isAddedToCart ? "remove" : "add"
+    className: `button-default ${
+      props.isAddedToCart ? "secondary" : "primary"
     }`,
     children: [
       icon({
         className: `fa ${props?.isAddedToCart ? "fa-trash" : "fa-plus"}`,
       }),
-      props.isAddedToCart ? "Remove From Cart" : "Add To Cart",
+      props.isAddedToCart
+        ? textNode("Remove From Cart")
+        : textNode("Add To Cart"),
     ],
   });
 };
@@ -103,11 +106,11 @@ const ProductCard = (props) => {
           }),
           div({
             className: "product-card__title",
-            children: [h4({ children: [props.title] })],
+            children: [h4({ children: [textNode(props.title)] })],
           }),
           div({
             className: "product-card__description",
-            children: [p({ children: [props.description] })],
+            children: [p({ children: [textNode(props.description)] })],
           }),
         ],
       }),
@@ -150,7 +153,11 @@ async function getApiData() {
 }
 
 function App(props = {}) {
-  const { products = [], isProductsLoading = true } = store.getState();
+  const {
+    products = [],
+    isProductsLoading = true,
+    shouldUpdateLayout = false,
+  } = store.getState();
 
   sideEffect.createEffect(async () => {
     const products = await getApiData();
@@ -161,44 +168,69 @@ function App(props = {}) {
     return div({
       className: "preloader",
       children: [
+        textNode("hello"),
         span({
           className: "preloader__spinner",
-          children: ["...loading"],
+          children: [textNode("...loading")],
         }),
       ],
     });
   }
 
+  let productCards = products.map((itm) => {
+    return ProductCard({
+      id: itm.id,
+      image: itm.image,
+      title: itm.title,
+      description: itm.description,
+      maxQuantity: itm.maxQuantity,
+      selectedQuantity: itm.selectedQuantity,
+      isAddedToCart: itm.isAddedToCart,
+    });
+  });
+
   return div({
     className: "product-container",
-    children: [
-      ...products.map((itm) => {
-        return ProductCard({
-          id: itm.id,
-          image: itm.image,
-          title: itm.title,
-          description: itm.description,
-          maxQuantity: itm.maxQuantity,
-          selectedQuantity: itm.selectedQuantity,
-          isAddedToCart: itm.isAddedToCart,
-        });
-      }),
-    ],
+    children: shouldUpdateLayout
+      ? productCards
+      : [
+          textNode("hello"),
+          button({
+            className: "button-default primary",
+            onclick: () => {
+              store.setState({ ...store.getState(), shouldUpdateLayout: true });
+            },
+            children: [textNode("Click me")],
+          }),
+          div({
+            className: "secondary-container",
+            children: [
+              ...products.map((itm) => {
+                return ProductCard({
+                  id: itm.id,
+                  image: itm.image,
+                  title: itm.title,
+                  description: itm.description,
+                  maxQuantity: itm.maxQuantity,
+                  selectedQuantity: itm.selectedQuantity,
+                  isAddedToCart: itm.isAddedToCart,
+                });
+              }),
+            ],
+          }),
+        ],
   });
 }
 
-let historyVtree = new App();
+const appRoot = document.querySelector("#app");
+let historyVtree = App();
+appRoot.appendChild(render(appRoot, historyVtree));
+
 store.subscribe(function () {
-  const appRoot = document.querySelector("#app");
-  const newVtree = new App();
+  const newVtree = App();
   reconcileDom(appRoot, historyVtree, newVtree);
   historyVtree = newVtree;
+  console.log(historyVtree);
 });
-document.querySelector("#app")?.appendChild(render(historyVtree));
 
-const foo = {};
-const { helo } = foo;
-console.log(helo);
-
-// that 70s show.
-// silicon valley.
+console.log(historyVtree);

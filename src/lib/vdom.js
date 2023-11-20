@@ -5,21 +5,13 @@ function objectToStyleString(obj) {
   return entries.map(([key, value]) => `${key}:${value}`).join(";");
 }
 
-function createVNode(type, attrs, ...children) {
-  return {
-    type,
-    attrs: attrs || {},
-    children,
-  };
-}
-
 function createVElement(type) {
-  return function ({ children = [], className, style, ...rest }) {
+  return ({ children = [], className, style, text = "", ...rest }) => {
     let attrs = {};
     if (className) attrs.class = className;
     if (style) attrs.style = objectToStyleString(style);
     attrs = { ...rest, ...attrs };
-    return createVNode(type, attrs, ...children);
+    return { type, attrs, children, text };
   };
 }
 // -----------------------------------
@@ -39,62 +31,74 @@ export const h5 = createVElement("h5");
 export const h6 = createVElement("h6");
 export const button = createVElement("button");
 export const icon = createVElement("i");
+export const textNode = (text) => createVElement("text").call(null, { text });
 // -----------------------------------------------------
 
-export function render(vnode) {
-  if (typeof vnode === "string" || typeof vnode === "number") {
-    return document.createTextNode(vnode);
-  }
-  const domNode = document.createElement(vnode.type);
+export function render(domParent, vNode) {
+  if (!vNode) return vNode;
 
-  for (let key in vnode.attrs) {
+  if (vNode?.type == "text") {
+    return document.createTextNode(vNode.text);
+  }
+
+  if (domParent) vNode.domParent = domParent;
+
+  const domNode = document.createElement(vNode.type);
+
+  for (let key in vNode.attrs) {
     if (key.startsWith("on")) {
-      domNode[key] = vnode.attrs[key];
+      domNode[key] = vNode.attrs[key];
     } else {
-      domNode.setAttribute(key, vnode.attrs[key]);
+      domNode.setAttribute(key, vNode.attrs[key]);
     }
   }
 
-  for (let child of vnode.children) {
-    domNode.append(render(child));
+  for (let child of vNode.children) {
+    domNode.append(render(domNode, child));
   }
   return domNode;
 }
 
 export function reconcileDom(domParent, oldVNode, newVNode, index = 0) {
+  const domChild = domParent?.childNodes[index];
+  newVNode.domParent = domChild?.parentNode;
+
   // new additions
-  if (!oldVNode?.type && newVNode?.type) {
-    domParent.appendChild(render(newVNode));
+  if (!oldVNode && newVNode && domParent) {
+    domParent.appendChild(render(null, newVNode));
     return;
   }
 
   // removals
-  if (oldVNode?.type && !newVNode?.type) {
-    domParent.removeChild(domParent.childNodes[index]);
+  if (oldVNode && !newVNode && domChild) {
+    domParent.removeChild(domChild);
     return;
   }
 
   // changed
   if (isNodeChanged(oldVNode, newVNode)) {
-    domParent.replaceChild(render(newVNode), domParent.childNodes[index]);
-    return;
+    const rendered = render(null, newVNode);
+    if (rendered && domChild) {
+      domParent.replaceChild(rendered, domChild);
+    }
   }
 
   // heuristics for comparing nodes
-  if (isStyleChnaged(oldVNode, newVNode)) {
-    domParent.childNodes[index].setAttribute("style", newVNode.attrs.style);
+  if (isStyleChnaged(oldVNode, newVNode) && domChild) {
+    domChild.setAttribute("style", newVNode?.attrs?.style);
   }
-  if (isClassChanged(oldVNode, newVNode)) {
-    domParent.childNodes[index].setAttribute("class", newVNode?.attrs?.class);
+  if (isClassChanged(oldVNode, newVNode) && domChild) {
+    domChild.setAttribute("class", newVNode?.attrs?.class);
   }
 
   // Recursively update children
-  if (newVNode.type && oldVNode.type) {
+  if (domParent?.childNodes.length > 0) {
     const newLength = newVNode?.children.length;
     const oldLength = oldVNode?.children?.length;
+
     for (let i = 0; i < newLength || i < oldLength; i++) {
       reconcileDom(
-        domParent.childNodes[index],
+        newVNode.domParent,
         oldVNode.children[i],
         newVNode.children[i],
         i
@@ -104,12 +108,7 @@ export function reconcileDom(domParent, oldVNode, newVNode, index = 0) {
 }
 
 function isNodeChanged(oldVNode, newVNode) {
-  return (
-    typeof oldVNode !== typeof newVNode ||
-    (typeof oldVNode === "string" && oldVNode !== newVNode) ||
-    (typeof oldVNode === "number" && oldVNode !== newVNode) ||
-    oldVNode.type !== newVNode.type
-  );
+  return oldVNode?.text !== newVNode?.text || oldVNode?.type !== newVNode?.type;
 }
 
 function isStyleChnaged(oldVNode, newVNode) {
@@ -122,4 +121,8 @@ function isClassChanged(oldVNode, newVNode) {
   const oldClass = oldVNode?.attrs?.class;
   const newClass = newVNode?.attrs?.class;
   return oldClass !== newClass;
+}
+
+function isDomParentChanged(domParent, oldVNode, newVNode) {
+  return oldVNode?.domParent !== newVNode?.domParent && domParent && newVNode;
 }

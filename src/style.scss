@@ -103,60 +103,61 @@ body {
     border-top: 1px solid $border-primary;
     gap: 16px;
   }
+}
 
-  &__cart-button {
-    font-family: "Poppins", sans-serif;
-    width: 100%;
-    padding: 8px 16px;
+.button-default {
+  font-family: "Poppins", sans-serif;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  line-height: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: none;
+  color: #ffffff;
+  transition: all 0.3s ease;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  max-height: 48px;
+
+  @media screen and (max-width: 600px) {
+    font-size: 0.9rem;
+  }
+
+  & i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-45%);
     font-size: 0.8rem;
-    line-height: 1.3rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    border-radius: 6px;
-    border: none;
-    color: #ffffff;
-    transition: all 0.3s ease;
-    width: 100%;
-    cursor: pointer;
-    display: flex;
-    gap: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    line-height: 1;
 
-    @media screen and (max-width: 600px) {
-      font-size: 0.9rem;
+    &::before {
+      line-height: 1.4;
     }
+  }
 
-    & i {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-45%);
-      font-size: 0.8rem;
-      line-height: 1;
-
-      &::before {
-        line-height: 1.4;
-      }
+  &.primary {
+    background-color: $primary-color;
+    &:hover {
+      background-color: lighten($primary-color, 10%);
     }
+  }
 
-    &.add {
-      background-color: $primary-color;
-      &:hover {
-        background-color: lighten($primary-color, 10%);
-      }
-    }
-
-    &.remove {
-      border: 1px solid #be3144;
-      background-color: transparent;
-      color: #be3144;
-      &:hover {
-        background-color: $background-color-hover;
-      }
+  &.secondary {
+    border: 1px solid #be3144;
+    background-color: transparent;
+    color: #be3144;
+    &:hover {
+      background-color: $background-color-hover;
     }
   }
 }
