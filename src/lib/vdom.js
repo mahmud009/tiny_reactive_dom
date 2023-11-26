@@ -34,76 +34,61 @@ export const icon = createVElement("i");
 export const textNode = (text) => createVElement("text").call(null, { text });
 // -----------------------------------------------------
 
-export function render(domParent, vNode) {
-  if (!vNode) return vNode;
+export function render(vNode) {
+  let domNode;
 
   if (vNode?.type == "text") {
-    return document.createTextNode(vNode.text);
-  }
+    domNode = document.createTextNode(vNode.text);
+  } else {
+    domNode = document.createElement(vNode.type);
 
-  if (domParent) vNode.domParent = domParent;
+    for (let key in vNode.attrs) {
+      if (key.startsWith("on")) {
+        domNode[key.toLowerCase()] = vNode.attrs[key];
+      } else {
+        domNode.setAttribute(key, vNode.attrs[key]);
+      }
+    }
 
-  const domNode = document.createElement(vNode.type);
-
-  for (let key in vNode.attrs) {
-    if (key.startsWith("on")) {
-      domNode[key] = vNode.attrs[key];
-    } else {
-      domNode.setAttribute(key, vNode.attrs[key]);
+    for (let child of vNode.children) {
+      domNode.append(render(child));
     }
   }
 
-  for (let child of vNode.children) {
-    domNode.append(render(domNode, child));
-  }
+  vNode.domRef = domNode;
   return domNode;
 }
 
-export function reconcileDom(domParent, oldVNode, newVNode, index = 0) {
-  const domChild = domParent?.childNodes[index];
-  newVNode.domParent = domChild?.parentNode;
-
-  // new additions
-  if (!oldVNode && newVNode && domParent) {
-    domParent.appendChild(render(null, newVNode));
-    return;
-  }
+export function reconcileDom(domParent, oldVNode, newVNode, idx = 0) {
+  const domChild = domParent.childNodes[idx];
+  const newVChildLen = newVNode?.children.length;
+  const oldVChildLen = oldVNode?.children.length;
 
   // removals
-  if (oldVNode && !newVNode && domChild) {
-    domParent.removeChild(domChild);
-    return;
+  if (oldVNode && !newVNode) {
+    return domParent.removeChild(domChild);
   }
 
-  // changed
-  if (isNodeChanged(oldVNode, newVNode)) {
-    const rendered = render(null, newVNode);
-    if (rendered && domChild) {
-      domParent.replaceChild(rendered, domChild);
-    }
+  // additions
+  if (!oldVNode && newVNode) {
+    return domParent.appendChild(render(newVNode));
   }
 
-  // heuristics for comparing nodes
-  if (isStyleChnaged(oldVNode, newVNode) && domChild) {
-    domChild.setAttribute("style", newVNode?.attrs?.style);
+  // node definition changed or children length change
+  if (isNodeChanged(oldVNode, newVNode) || newVChildLen !== oldVChildLen) {
+    return domParent.replaceChild(render(newVNode), domChild);
   }
-  if (isClassChanged(oldVNode, newVNode) && domChild) {
+
+  if (isClassChanged(oldVNode, newVNode)) {
     domChild.setAttribute("class", newVNode?.attrs?.class);
   }
 
-  // Recursively update children
-  if (domParent?.childNodes.length > 0) {
-    const newLength = newVNode?.children.length;
-    const oldLength = oldVNode?.children?.length;
+  if (isStyleChnaged(oldVNode, newVNode)) {
+    domChild.setAttribute("style", newVNode?.attrs?.style);
+  }
 
-    for (let i = 0; i < newLength || i < oldLength; i++) {
-      reconcileDom(
-        newVNode.domParent,
-        oldVNode.children[i],
-        newVNode.children[i],
-        i
-      );
-    }
+  for (let i = 0; i < newVChildLen || i < oldVChildLen; i++) {
+    reconcileDom(domChild, oldVNode?.children[i], newVNode?.children[i], i);
   }
 }
 
@@ -121,8 +106,4 @@ function isClassChanged(oldVNode, newVNode) {
   const oldClass = oldVNode?.attrs?.class;
   const newClass = newVNode?.attrs?.class;
   return oldClass !== newClass;
-}
-
-function isDomParentChanged(domParent, oldVNode, newVNode) {
-  return oldVNode?.domParent !== newVNode?.domParent && domParent && newVNode;
 }

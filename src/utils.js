@@ -11,3 +11,12 @@ export const sampleProducts = Array.from({ length: 50 }).map((itm, idx) => {
     isAddedToCart: false,
   };
 });
+
+export function getApiData() {
+  return new Promise((resolve, reject) => {
+    let timeout = setTimeout(() => {
+      resolve(sampleProducts);
+      clearTimeout(timeout);
+    }, 1000);
+  });
+}

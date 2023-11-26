@@ -46,12 +46,27 @@ body {
   }
 }
 
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .preloader {
   width: 100%;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+
+  .fa-solid {
+    color: $text-primary;
+    font-size: 3rem;
+    animation: spin 1.5s linear infinite;
+  }
 }
 
 .product-card {

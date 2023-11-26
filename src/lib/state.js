@@ -25,3 +25,5 @@ export class State {
     this.listeners = this.listeners.filter((l) => l !== listener);
   }
 }
+
+export const store = new State();
