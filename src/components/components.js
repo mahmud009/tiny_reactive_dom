@@ -18,7 +18,7 @@ export const Counter = (props) => {
         children: [textNode(props.value)],
       }),
       button({
-        onclick: (event) => {
+        onClick: (event) => {
           event.stopPropagation();
           props.onChange(true);
         },

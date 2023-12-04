@@ -5,33 +5,39 @@ function objectToStyleString(obj) {
   return entries.map(([key, value]) => `${key}:${value}`).join(";");
 }
 
-function createVElement(type) {
+function createVNode(type) {
   return ({ children = [], className, style, text = "", ...rest }) => {
     let attrs = {};
     if (className) attrs.class = className;
     if (style) attrs.style = objectToStyleString(style);
     attrs = { ...rest, ...attrs };
-    return { type, attrs, children, text };
+    return {
+      type,
+      attrs,
+      children,
+      text,
+    };
   };
 }
 // -----------------------------------
 
 // ------------virtual dom element templates-----------
-export const script = createVElement("script");
-export const div = createVElement("div");
-export const span = createVElement("span");
-export const img = createVElement("img");
-export const a = createVElement("a");
-export const p = createVElement("p");
-export const h1 = createVElement("h1");
-export const h2 = createVElement("h2");
-export const h3 = createVElement("h3");
-export const h4 = createVElement("h4");
-export const h5 = createVElement("h5");
-export const h6 = createVElement("h6");
-export const button = createVElement("button");
-export const icon = createVElement("i");
-export const textNode = (text) => createVElement("text").call(null, { text });
+export const script = createVNode("script");
+export const div = createVNode("div");
+export const span = createVNode("span");
+export const img = createVNode("img");
+export const a = createVNode("a");
+export const p = createVNode("p");
+export const h1 = createVNode("h1");
+export const h2 = createVNode("h2");
+export const h3 = createVNode("h3");
+export const h4 = createVNode("h4");
+export const h5 = createVNode("h5");
+export const h6 = createVNode("h6");
+export const button = createVNode("button");
+export const input = createVNode("input");
+export const icon = createVNode("i");
+export const textNode = (text) => createVNode("text").call(null, { text });
 // -----------------------------------------------------
 
 export function render(vNode) {
@@ -92,8 +98,68 @@ export function reconcileDom(domParent, oldVNode, newVNode, idx = 0) {
   }
 }
 
+export function reconcileDom2(domParent, oldDomNode, newDomNode, idx = 0) {
+  // removals
+  if (oldDomNode && !newDomNode) {
+    return domParent.removeChild(oldDomNode);
+  }
+
+  // additions
+  if (!oldDomNode && newDomNode) {
+    return domParent.appendChild(newDomNode);
+  }
+
+  // node definition changed
+  if (isDomNodeChanged(oldDomNode, newDomNode)) {
+    return domParent.replaceChild(newDomNode, domParent.childNodes[idx]);
+  }
+
+  const oldChildLen = oldDomNode?.childNodes.length;
+  const newChildLen = newDomNode?.childNodes.length;
+
+  for (let child of domParent.childNodes) {
+    for (let i = 0; i < newChildLen || i < oldChildLen; i++) {
+      reconcileDom2(
+        child,
+        oldDomNode.childNodes[i],
+        newDomNode.childNodes[i],
+        i
+      );
+    }
+  }
+}
+
+function isDomNodeChanged(oldDomNode, newDomNode) {
+  if (oldDomNode.tagName !== newDomNode.tagName) return true;
+
+  let attrsA = Array.from(oldDomNode.attributes);
+  let attrsB = Array.from(newDomNode.attributes);
+
+  if (attrsA.length !== attrsB.length) return true;
+
+  for (let attrA of attrsA) {
+    if (attrA.value !== newDomNode.getAttribute(attrA.name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+let el1 = document.createElement("div");
+el1.setAttribute("class", "foo");
+el1.setAttribute("style", "bar");
+let el2 = document.createElement("div");
+el2.setAttribute("class", "foo");
+el2.setAttribute("style", "bar");
+
+console.log(isDomNodeChanged(el1, el2));
+
 function isNodeChanged(oldVNode, newVNode) {
-  return oldVNode?.text !== newVNode?.text || oldVNode?.type !== newVNode?.type;
+  return (
+    oldVNode?.text !== newVNode?.text ||
+    oldVNode?.type !== newVNode?.type ||
+    oldVNode.childNodes.length !== newVNode.childNodes.length
+  );
 }
 
 function isStyleChnaged(oldVNode, newVNode) {

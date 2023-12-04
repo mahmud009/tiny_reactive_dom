@@ -1,45 +1,30 @@
-class DomNode {
-  constructor(type, children = []) {
+class VNode {
+  constructor({ type, children = [], className, style, text = "", ...rest }) {
     this.type = type;
     this.children = children;
+    let attrs = {};
+    if (className) attrs.class = className;
+    if (style) attrs.style = objectToStyleString(style);
+    attrs = { ...rest, ...attrs };
+    this.attrs = attrs;
+    this.text = text;
   }
 
-  appendChild(...nodes) {
-    this.children.push(...nodes);
-    return nodes;
+  appendChild(childVNode) {
+    this.children = this.children.filter((vNode) => vNode !== childVNode);
+    return childVNode;
   }
 
-  removeChild(node) {
-    this.children = this.children.filter((child) => child !== node);
-    return node;
+  removeChild(childVNode) {
+    this.children = this.children.filter((vNode) => vNode !== childVNode);
+    return childVNode;
   }
 
-  replaceChild(newNode, oldNode) {
-    this.children = this.children.map((itm) => {
-      return itm == oldNode ? newNode : oldNode;
+  replaceChild(newVNode, oldVNode) {
+    this.children = this.children.map((vNode) => {
+      if (vNode == oldVNode) return newVNode;
+      return vNode;
     });
-    return newNode;
-  }
-}
-
-function createDomTree(parent, childCount, depth) {
-  if (depth == 0) return;
-  if (parent == null) parent = new DomNode("dom_root");
-  for (let i = 1; i <= childCount; i++) {
-    parent.appendChild(new DomNode(`dom_child_${i}`));
-  }
-  for (let i = 0; i < parent.children.length; i++) {
-    createDomTree(parent.children[i], depth - 1);
-  }
-  return parent;
-}
-
-const domTree = createDomTree(null, 4, 2);
-
-function traverseTree(node) {
-  console.log(node.type);
-
-  for (let i = 0; i < node.children.length; i++) {
-    traverseTree(node.children[i]);
+    return oldVNode;
   }
 }

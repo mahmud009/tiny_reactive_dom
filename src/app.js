@@ -9,6 +9,8 @@ import {
   reconcileDom,
   icon,
   textNode,
+  input,
+  reconcileDom2,
 } from "./lib/vdom";
 import { getApiData, sampleProducts } from "./utils";
 import { State } from "./lib/state";
@@ -17,13 +19,23 @@ import "./test";
 import { Preloader, ProductCard } from "./components/components";
 import { store } from "./lib/state";
 import { sideEffect } from "./lib/sideEffect";
+import { StateCounter } from "./components/StateCounter";
 
 function App(props = {}) {
   const {
     products = [],
     shouldUpdateLayout = false,
     isLoading = true,
+    inputValue = 10,
   } = store.getState();
+
+  // const stateCounter1 = new StateCounter({});
+  // const stateCounter2 = new StateCounter({});
+
+  // return div({
+  //   className: "state-counter-parent",
+  //   children: [stateCounter1, stateCounter2],
+  // });
 
   sideEffect.createEffect(async () => {
     const products = await getApiData();
@@ -48,15 +60,11 @@ function App(props = {}) {
       });
 }
 
-const appRoot = document.querySelector("#app");
-let historyVtree = App();
-appRoot.appendChild(render(historyVtree));
+// const appRoot = document.querySelector("#app");
+// let historyDomTree = render(App());
+// appRoot.appendChild(historyDomTree);
 
-store.subscribe(function () {
-  const newVtree = App();
-  reconcileDom(appRoot, historyVtree, newVtree);
-  historyVtree = newVtree;
-  // console.log(historyVtree);
-});
-
-console.log(historyVtree);
+// store.subscribe(function () {
+//   const newDomTree = render(App());
+//   reconcileDom2(appRoot, historyDomTree, newDomTree);
+// });
